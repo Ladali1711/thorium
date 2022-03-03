@@ -10,16 +10,17 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 mongoose.connect("mongodb+srv://functionup-cohort:G0Loxqc9wFEGyEeJ@cluster0.rzotr.mongodb.net/Pritesh8769811-DB?retryWrites=true&w=majority", {
+    // useNewUrlParser: true
+})
+mongoose.connect( "mongodb+srv://ladalipravin:Ktxildd7HtOatr5Y@cluster0.mt4xp.mongodb.net/ladali-DB?retryWrites=true&w=majority", {
     useNewUrlParser: true
+    // useCreateIndex:true,
+    // useUnifideTopology:true,
+    // useFindAndModify:false
 })
-mongoose.connect( "mongodb+srv://ladalipravin:Ktxildd7HtOatr5Y@cluster0.mt4xp.mongodb.net/ladali?retryWrites=true&w=majority", {
-    useNewUrlParser: true,
-    useCreateIndex:true,
-    useUnifideTopology:true,
-    useFindAndModify:false
+.then( () => console.log("MongoDb is connected"))
+.catch ( err => console.log('no connection') )
 
-
-})
 .then( () => console.log("MongoDb is connected"))
 .catch ( err => console.log('no connection') )
 
