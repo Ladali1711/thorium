@@ -54,6 +54,14 @@ const getUserData = async function (req, res) {
   // Input 1 is the token to be decoded
   // Input 2 is the same secret with which the token was generated
   // Check the value of the decoded token yourself
+
+  if (!token) token = req.headers["x-auth-token"];
+
+  //If no token is present in the request header return error
+  if (!token) return res.send({ status: false, msg: "token must be present" });
+
+  console.log(token);
+  
   let decodedToken = jwt.verify(token, "functionup-thorium");
   if (!decodedToken)
     return res.send({ status: false, msg: "token is invalid" });
@@ -84,7 +92,73 @@ const updateUser = async function (req, res) {
   res.send({ status: updatedUser, data: updatedUser });
 };
 
+const createUser1 = async function (req, res){
+
+  let data  = req.body
+  let user = await UserModel.create(data)
+  res.send({user : true, msg: user})
+}
+
+const login = async function (req, res){
+
+  let userName = req.body.emailId;
+  let password = req.body.password;
+
+  let user = await userModel.findOne({ emailId: userName, password: password });
+  if (!user)
+    return res.send({
+      status: false,
+      msg: "username or the password is not corerct",
+    });
+    let token = jwt.sign(
+      {
+        userId: user._id.toString(),
+        batch: "thorium",
+        organisation: "FUnctionUp",
+      },
+      "functionup-thorium"
+    );
+    res.setHeader("x-auth-token", token);
+    res.send({ status: true, data: token });
+}
+
+const getUser = async function(req, res){
+  let id = req.params.userId
+  
+  let user = await UserModel.findById(id)
+  
+  res.send({user: true, msg: user})
+  
+  }
+
+const updateUser1 = async function(req, res){
+  let id = req.params.userId
+  let data = req.body
+
+  let update = await UserModel.findByIdAndUpdate({_id : id}, {$set : data}, {new : true})
+
+  res.send({user: true, msg: update})
+
+}
+
+const deleteUser = async function(req, res){
+  let id = req.params.userId
+  let deletedUser = await UserModel.findByIdAndUpdate({_id : id}, {$set : {isDeleted : true}}, {new : true} )
+
+  res.send({user: true, msg : deletedUser})
+
+}
+
 module.exports.createUser = createUser;
 module.exports.getUserData = getUserData;
 module.exports.updateUser = updateUser;
 module.exports.loginUser = loginUser;
+module.exports.createUser1 = createUser1
+module.exports.login = login
+module.exports.getUser = getUser
+module.exports.updateUser1 = updateUser1
+module.exports.deleteUser = deleteUser
+
+
+
+
