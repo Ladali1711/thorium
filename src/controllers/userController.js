@@ -1,75 +1,100 @@
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/userModel");
+
+
+
 const createUser = async function (req, res) {
-  let data = req.body;
-  let savedData = await userModel.create(data);
-  //console.log(req.newAtribute);
-  res.send({ msg: savedData });
-};
-
-const loginUser = async function (req, res) {
-  let userName = req.body.emailId;
-  let password = req.body.password;
-
-  let user = await userModel.findOne({ emailId: userName, password: password });
-  if (!user)
-    return res.send({
-      status: false,
-      msg: "username or the password is not corerct",
-    });
-    let token = jwt.sign(
-    {
-      userId: user._id.toString(),
-      batch: "thorium",
-      organisation: "FUnctionUp",
-    },
-    "functionup-thorium"
-  );
-  res.setHeader("x-auth-token", token);
-  res.send({ status: true, data: token });
-};
-
-const getUserData = async function (req, res) {
-  
-  let userId = req.params.userId;
-  let userDetails = await userModel.findById(userId);
-  if (!userDetails)
-    return res.send({ status: false, msg: "No such user exists" });
-  res.send({ status: true, data: userDetails });
-};
-
-const updateUser = async function (req, res) {
-  let userId = req.params.userId;
-  let user = await userModel.findById(userId);
-  //Return an error if no user with the given id exists in the db
-  if (!user) {
-    return res.send("No such user exists");
+  try {
+    let data = req.body;
+    if (Object.keys(data).length > 0) {
+      let user = await userModel.create(req.body);
+      res.status(201).send({ status: true, msg: user });
+    } else {
+      res.status(400).send({ error: "Please provide input data" });
+    }
+  } catch (error) {
+        res.status(500).send({ error: error.message });
   }
-  let userData = req.body;
-  let updatedUser = await userModel.findOneAndUpdate({ _id: userId }, userData,{new:true});
-  res.send({ status: true, data: updatedUser });
 };
 
-const postMessage=async function(req, res){
- let userId=req.params.userId;
-let user=await userModel.findById(userId);
-if(!user) return res.send({status:false,msg:"No such user exists"})
+const userLogin = async function (req, res) {
+  try {
+    let userName = req.body.emailId;
+    let password = req.body.password;
 
-let updatedPosts=user.posts;
-let message=req.body.message;
-updatedPosts.push(message)
-let updatedData= await userModel.findOneAndUpdate({_id:userId},{$set:{posts:updatedPosts}},{new:true});
-res.send({status:true,msg:{updatedData}})  
+    if (userName && password) {
+      let user = await userModel.findOne({
+        emailId: userName,
+        password: password,
+      });
+      if (!user)
+        return res
+          .status(404)
+          .send({ status: false, msg: "username or password is incorrect " });
+
+      let userToken = jwt.sign({ userId: user._id.toString() }, "SurajDubey");
+
+      res.status(200).send({ status: true, msg: userToken });
+    } else {
+      res.status(400).send({ status: false, error: "Please provide user inputs" });
+    }
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
 };
 
-const updateIsDelete = async function (req, res) {
-  let user=req.params.userId; 
-  let updatedUser = await userModel.findOneAndUpdate({ _id: user }, {$set:{isDeleted:true}}, {new:true});
-  res.send({ status: true, data: updatedUser });
+const getUser = async function (req, res) {
+  try{
+
+    let id = req.params.userId;
+    let userById = await userModel.findById(id);
+
+      res.status(200).send({ status: true, msg: userById });
+
+  }catch (error) {
+    res.status(500).send({error: error.message})
+  }
 };
+
+const updateUserData = async function (req, res) {
+  try{
+  let id = req.params.userId;
+  let data = req.body;
+  if(Object.keys(data).length > 0){
+
+    let updateUser = await userModel.findByIdAndUpdate(
+      { _id: id },
+      { $set: data },
+      { new: true }
+    );
+    res.status(200).send({ status: true, msg: updateUser });
+  }else{
+    res.status(400).send({status : false, msg: "provide input data"})
+  }
+  }
+  catch (error) {
+    res.status(500).send({error : error.message})
+  }
+};
+
+const deleteUserData = async function (req, res) {
+  try {
+
+    let id = req.params.userId;
+    let deleteUser = await userModel.findByIdAndUpdate(
+      { _id: id },
+      { $set: { isDeleted: true } },
+      { new: true }
+      );
+      res.status(201).send({ status: true, msg: deleteUser })
+    }catch (error){
+        res.status(500).send({error :error.message})
+    }
+  }
+
+
 module.exports.createUser = createUser;
-module.exports.getUserData = getUserData;
-module.exports.updateUser = updateUser;
-module.exports.loginUser = loginUser;
-module.exports.postMessage = postMessage;
-module.exports.updateIsDelete = updateIsDelete;
+module.exports.userLogin = userLogin;
+module.exports.getUser = getUser;
+module.exports.updateUserData = updateUserData;
+module.exports.deleteUserData = deleteUserData;

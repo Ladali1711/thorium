@@ -1,36 +1,54 @@
-const jwt = require("jsonwebtoken");
-const authenticationUser=function(req,res,next)
-{
-    let token = req.headers["x-auth-token"];
-    if (!token) return res.send({ status: false, msg: "token must be present" });
+const jwt = require('jsonwebtoken')
+const userModel = require('../models/userModel')
 
- let decodedToken = jwt.verify(token, "functionup-thorium");//verifying token with secret key
- console.log(decodedToken)
- //console.log(decodedToken)
+const authenticate = async function(req, res, next) {
+    let token = req.headers["x-auth-token"]
+    if(!token) return res.send({status: false, msg: "token must be provided"})
 
-  if (!decodedToken)
-    return res.send({ status: false, msg: "token is invalid" });//validating token value inside decodedToken
+    let verifiedToken = jwt.verify(token , "SurajDubey")   
+    if(!verifiedToken) return res.send({status: false, msg: "Invalid token"})
 
-  next();
+     req.isVerifiedTokenId = verifiedToken.userId
+
+    next()
+   try{
+       let token = req.headers["x-auth-token"]
+
+       if(!token) return res.status(400).send({status: false, msg: "token must be provided"})
+
+       let verifiedToken = jwt.verify(token , "SurajDubey")   
+       if(!verifiedToken) return res.status(401).send({status: false, msg: "Invalid token"})
+
+       req.isVerifiedTokenId = verifiedToken.userId
+
+       next()
+    }catch (error){
+        res.status(500).send({error : error.message})
+    }
 }
 
-module.exports.authenticationUser = authenticationUser; 
-const authorisationUser=function(req,res,next)
-{
-  let token = req.headers["x-auth-token"];
 
-  let decodedToken = jwt.verify(token, "functionup-thorium");
+const authorize = async function(req, res, next) {
+    let id = req.params.userId
+    try{
+        let id = req.params.userId
+        if(!id) return res.status(400).send({status: false, msg: "invalid ID"})
 
-  let authorisedUser=decodedToken.userId;
-  let logedInUser=req.params.userId;
-  // console.log(authorisedUser,logedInUser);
-  // console.log(typeof(authorisedUser),typeof(logedInUser));
-  if(authorisedUser!==logedInUser) return res.send({status:false,msg:"You are not an authorized person to make these changes"})
+        let userById1 = await userModel.findById(id)
+    if (!userById1) return res.status(404).send({status: false, msg: "user does not exist"})
 
-  next();
+    let tokenId = req.isVerifiedTokenId
 
+    let userById = await userModel.findById(id)
+    if (!userById) return res.send({status: false, msg: "user does not exist"})
+
+    if(tokenId != id) return res.send({status: false, msg: "Unauthorized access"})
+    if(tokenId != id) return res.status(403).send({status: false, msg: "Unauthorized access"})
+    next()
+    } catch (error){
+        res.status(500).send({error: error.message})
+    }
 }
 
-module.exports.authenticationUser = authenticationUser;
-
-module.exports.authorisationUser = authorisationUser;
+module.exports.authenticate = authenticate
+module.exports.authorize = authorize
