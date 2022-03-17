@@ -19,7 +19,7 @@ const login = async function (req, res){
     if (!user){
       return res.send({Err: "email or password is incorrect"})
     }
-    const token = jwt.sign({id: user._id, name: user.firstName, myName: "rohan"}, "projectOne")
+    const token = jwt.sign({id: user._id, name: user.firstName, myName: "Ladali"}, "projectOne")
     res.setHeader("x-api-key", token)
     res.status(201).send({status: true, token: token})
   }
